@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module contains the tool of birdhousebuilder.recipe.pywps
+This module contains the tool of birdhousebuilder.recipe.solr
 """
 from setuptools import find_packages
 from setuptools import setup
