@@ -20,7 +20,7 @@ class Recipe(object):
         self.options['prefix'] = self.prefix
         
         self.options['hostname'] = options.get('hostname', 'localhost')
-        self.options['http_port'] = options.get('http_port', '8091')
+        self.options['http_port'] = options.get('http_port', '8983')
         self.options['sites'] = options.get('sites', 'birdhouse')
         self.options['user'] = options.get('user', '')
 
@@ -67,7 +67,7 @@ class Recipe(object):
             self.options.get('sites'),
             {'user': self.options.get('user'),
              'program': 'solr',
-             'command': '{0}/bin/solr start -f -p {1}'.format(solr_dir, self.options.get('port')),
+             'command': '{0}/bin/solr start -f -p {1}'.format(solr_dir, self.options.get('http_port')),
              'directory': solr_dir,
              'stopwaitsecs': '30',
              'killasgroup': 'true',
