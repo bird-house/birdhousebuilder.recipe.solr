@@ -21,6 +21,8 @@ class Recipe(object):
         
         self.options['hostname'] = options.get('hostname', 'localhost')
         self.options['http_port'] = options.get('http_port', '8091')
+        self.options['sites'] = options.get('sites', 'birdhouse')
+        self.options['user'] = options.get('user', '')
 
 
     def install(self):
@@ -59,13 +61,14 @@ class Recipe(object):
         return [output]
 
     def install_supervisor(self, update=False):
+        solr_dir = os.path.join(self.prefix, 'opt', 'solr')
         script = supervisor.Recipe(
             self.buildout,
-            self.sites,
+            self.options.get('sites'),
             {'user': self.options.get('user'),
              'program': 'solr',
-             'command': 'solr start',
-             'directory': os.path.join(self.prefix, 'var', 'solr'),
+             'command': '{0}/bin/solr start -f -p {1}'.format(solr_dir, self.options.get('port')),
+             'directory': solr_dir,
              'stopwaitsecs': '30',
              'killasgroup': 'true',
              })
