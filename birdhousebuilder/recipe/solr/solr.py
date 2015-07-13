@@ -8,9 +8,9 @@ from mako.template import Template
 
 from birdhousebuilder.recipe import conda, supervisor
 
-templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "solr.in.sh"))
-templ_log4j = Template(filename=os.path.join(os.path.dirname(__file__), "log4j.properties"))
-templ_solrconfig = Template(filename=os.path.join(os.path.dirname(__file__), "solrconfig.xml"))
+templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "solr.in.sh"))
+templ_log4j = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "log4j.properties"))
+templ_solr_core = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "5", "core.properties"))
 
 class Recipe(object):
     """This recipe is used by zc.buildout"""
@@ -25,6 +25,7 @@ class Recipe(object):
         self.options['hostname'] = options.get('hostname', 'localhost')
         self.options['http_port'] = options.get('http_port', '8983')
         self.options['sites'] = options.get('sites', 'birdhouse')
+        self.options['core'] = options.get('core', 'birdhouse')
         self.options['user'] = options.get('user', '')
 
 
@@ -34,7 +35,7 @@ class Recipe(object):
         installed += list(self.install_solr_server())
         installed += list(self.install_env())
         installed += list(self.install_log4j())
-        #installed += list(self.install_config())
+        installed += list(self.install_core())
         installed += list(self.install_supervisor())
         return tuple()
 
@@ -52,7 +53,7 @@ class Recipe(object):
     def install_solr_server(self):
         server_dir = os.path.join(self.prefix, 'var', 'solr')
         conda.makedirs(server_dir)
-        solr_xml = os.path.join(os.path.dirname(__file__), "solr.xml") 
+        solr_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "solr.xml") 
         shutil.copy(solr_xml, server_dir)
         return [solr_xml]
 
@@ -84,22 +85,42 @@ class Recipe(object):
             fp.write(result)
         return [output]
 
-    def install_config(self):
-        """
-        install solr config in ...
-        """
-        result = templ_solrconfig.render(**self.options)
-        output = os.path.join(self.prefix, 'etc', 'solr', 'solrconfig.xml')
-        conda.makedirs(os.path.dirname(output))
-                
-        try:
-            os.remove(output)
-        except OSError:
-            pass
+    def install_core(self):
+        core_dir = os.path.join(self.prefix, 'var', 'solr', self.options.get('core'))
+        conda.makedirs(core_dir)
+        
+        result = templ_solr_core.render(**self.options)
+        output = os.path.join(core_dir, 'core.properties')
 
         with open(output, 'wt') as fp:
             fp.write(result)
-        return [output]
+
+        solrconfig_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "solrconfig.xml")
+        core_conf_dir = os.path.join(core_dir, 'conf')
+        conda.makedirs(core_conf_dir) 
+        shutil.copy(solrconfig_xml, core_conf_dir)
+
+        schema_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "schema.xml")
+        shutil.copy(schema_xml, core_conf_dir)
+
+        stopwords_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "stopwords.txt")
+        shutil.copy(stopwords_txt, core_conf_dir)
+
+        stopwords_en_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "lang", "stopwords_en.txt")
+        lang_dir = os.path.join(core_conf_dir, "lang")
+        conda.makedirs(lang_dir)
+        shutil.copy(stopwords_en_txt, lang_dir)
+
+        synonyms_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "synonyms.txt")
+        shutil.copy(synonyms_txt, core_conf_dir)
+
+        protwords_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "protwords.txt")
+        shutil.copy(protwords_txt, core_conf_dir)
+
+        currency_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "currency.xml")
+        shutil.copy(currency_xml, core_conf_dir)
+
+        return [output, solrconfig_xml, schema_xml]
 
     def install_supervisor(self, update=False):
         solr_dir = os.path.join(self.prefix, 'opt', 'solr')
@@ -125,7 +146,7 @@ class Recipe(object):
         self.install_solr_server()
         self.install_env()
         self.install_log4j()
-        #self.install_config()
+        self.install_core()
         self.install_supervisor(update=True)
         return tuple()
 
