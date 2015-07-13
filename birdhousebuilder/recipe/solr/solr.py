@@ -7,6 +7,7 @@ from mako.template import Template
 
 from birdhousebuilder.recipe import conda, supervisor
 
+templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "solr.in.sh"))
 templ_solrconfig = Template(filename=os.path.join(os.path.dirname(__file__), "solrconfig.xml"))
 
 class Recipe(object):
@@ -28,6 +29,7 @@ class Recipe(object):
     def install(self):
         installed = []
         installed += list(self.install_solr())
+        installed += list(self.install_env())
         #installed += list(self.install_config())
         installed += list(self.install_supervisor())
         return tuple()
@@ -42,6 +44,20 @@ class Recipe(object):
             return script.update()
         else:
             return script.install()
+
+    def install_env(self):
+        result = templ_solr_env.render(**self.options)
+        output = os.path.join(self.prefix, 'var', 'solr', 'solr.in.sh')
+        conda.makedirs(os.path.dirname(output))
+                
+        try:
+            os.remove(output)
+        except OSError:
+            pass
+
+        with open(output, 'wt') as fp:
+            fp.write(result)
+        return [output]
         
     def install_config(self):
         """
@@ -62,12 +78,14 @@ class Recipe(object):
 
     def install_supervisor(self, update=False):
         solr_dir = os.path.join(self.prefix, 'opt', 'solr')
+        solr_env = os.path.join(self.prefix, 'var', 'solr', 'solr.in.sh')
         script = supervisor.Recipe(
             self.buildout,
             self.options.get('sites'),
-            {'user': self.options.get('user'),
+            {'user': self.options.get('user', ''),
              'program': 'solr',
-             'command': '{0}/bin/solr start -f -p {1}'.format(solr_dir, self.options.get('http_port')),
+             'command': '{0}/bin/solr start -f'.format(solr_dir),
+             'environment': 'SOLR_INCLUDE="{0}"'.format(solr_env),
              'directory': solr_dir,
              'stopwaitsecs': '30',
              'killasgroup': 'true',
@@ -79,6 +97,7 @@ class Recipe(object):
 
     def update(self):
         self.install_solr(update=True)
+        self.install_env()
         #self.install_config()
         self.install_supervisor(update=True)
         return tuple()
