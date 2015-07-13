@@ -3,11 +3,13 @@
 """Recipe solr"""
 
 import os
+import shutil
 from mako.template import Template
 
 from birdhousebuilder.recipe import conda, supervisor
 
 templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "solr.in.sh"))
+templ_log4j = Template(filename=os.path.join(os.path.dirname(__file__), "log4j.properties"))
 templ_solrconfig = Template(filename=os.path.join(os.path.dirname(__file__), "solrconfig.xml"))
 
 class Recipe(object):
@@ -29,7 +31,9 @@ class Recipe(object):
     def install(self):
         installed = []
         installed += list(self.install_solr())
+        installed += list(self.install_solr_server())
         installed += list(self.install_env())
+        installed += list(self.install_log4j())
         #installed += list(self.install_config())
         installed += list(self.install_supervisor())
         return tuple()
@@ -45,6 +49,13 @@ class Recipe(object):
         else:
             return script.install()
 
+    def install_solr_server(self):
+        server_dir = os.path.join(self.prefix, 'var', 'solr')
+        conda.makedirs(server_dir)
+        solr_xml = os.path.join(os.path.dirname(__file__), "solr.xml") 
+        shutil.copy(solr_xml, server_dir)
+        return [solr_xml]
+
     def install_env(self):
         result = templ_solr_env.render(**self.options)
         output = os.path.join(self.prefix, 'var', 'solr', 'solr.in.sh')
@@ -58,7 +69,21 @@ class Recipe(object):
         with open(output, 'wt') as fp:
             fp.write(result)
         return [output]
-        
+
+    def install_log4j(self):
+        result = templ_log4j.render(**self.options)
+        output = os.path.join(self.prefix, 'var', 'solr', 'log4j.properties')
+        conda.makedirs(os.path.dirname(output))
+                
+        try:
+            os.remove(output)
+        except OSError:
+            pass
+
+        with open(output, 'wt') as fp:
+            fp.write(result)
+        return [output]
+
     def install_config(self):
         """
         install solr config in ...
@@ -97,7 +122,9 @@ class Recipe(object):
 
     def update(self):
         self.install_solr(update=True)
+        self.install_solr_server()
         self.install_env()
+        self.install_log4j()
         #self.install_config()
         self.install_supervisor(update=True)
         return tuple()

@@ -81,12 +81,12 @@ ENABLE_REMOTE_JMX_OPTS="false"
 
 # Path to a directory where Solr creates index files, the specified directory
 # must contain a solr.xml; by default, Solr will use server/solr
-#SOLR_HOME=
+SOLR_HOME=${prefix}/var/solr/
 
 # Solr provides a default Log4J configuration properties file in server/resources
 # however, you may want to customize the log settings and file appender location
 # so you can point the script to use a different log4j.properties file
-#LOG4J_PROPS=/var/solr/log4j.properties
+LOG4J_PROPS=${prefix}/var/solr/log4j.properties
 
 # Location where Solr should write logs to; should agree with the file appender
 # settings in server/resources/log4j.properties
