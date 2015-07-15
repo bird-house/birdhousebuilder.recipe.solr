@@ -27,6 +27,7 @@ class Recipe(object):
         self.options['sites'] = options.get('sites', 'birdhouse')
         self.options['core'] = options.get('core', 'birdhouse')
         self.options['user'] = options.get('user', '')
+        self.solr_home = os.path.join(self.prefix, 'var', 'solr')
 
 
     def install(self):
@@ -39,6 +40,7 @@ class Recipe(object):
         installed += list(self.install_supervisor())
         return tuple()
 
+    
     def install_solr(self, update=False):
         script = conda.Recipe(
             self.buildout,
@@ -50,6 +52,7 @@ class Recipe(object):
         else:
             return script.install()
 
+        
     def install_solr_server(self):
         server_dir = os.path.join(self.prefix, 'var', 'solr')
         conda.makedirs(server_dir)
@@ -57,6 +60,7 @@ class Recipe(object):
         shutil.copy(solr_xml, server_dir)
         return [solr_xml]
 
+    
     def install_env(self):
         result = templ_solr_env.render(**self.options)
         output = os.path.join(self.prefix, 'var', 'solr', 'solr.in.sh')
@@ -71,6 +75,7 @@ class Recipe(object):
             fp.write(result)
         return [output]
 
+    
     def install_log4j(self):
         result = templ_log4j.render(**self.options)
         output = os.path.join(self.prefix, 'var', 'solr', 'log4j.properties')
@@ -85,8 +90,9 @@ class Recipe(object):
             fp.write(result)
         return [output]
 
+    
     def install_core(self):
-        core_dir = os.path.join(self.prefix, 'var', 'solr', self.options.get('core'))
+        core_dir = os.path.join(self.solr_home, self.options.get('core'))
         conda.makedirs(core_dir)
         
         result = templ_solr_core.render(**self.options)
@@ -117,14 +123,12 @@ class Recipe(object):
         protwords_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "protwords.txt")
         shutil.copy(protwords_txt, core_conf_dir)
 
-        currency_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "currency.xml")
-        shutil.copy(currency_xml, core_conf_dir)
-
         return [output, solrconfig_xml, schema_xml]
 
+    
     def install_supervisor(self, update=False):
         solr_dir = os.path.join(self.prefix, 'opt', 'solr')
-        solr_env = os.path.join(self.prefix, 'var', 'solr', 'solr.in.sh')
+        solr_env = os.path.join(self.solr_home, 'solr.in.sh')
         script = supervisor.Recipe(
             self.buildout,
             self.options.get('sites'),
@@ -133,8 +137,10 @@ class Recipe(object):
              'command': '{0}/bin/solr start -f'.format(solr_dir),
              'environment': 'SOLR_INCLUDE="{0}"'.format(solr_env),
              'directory': solr_dir,
-             'stopwaitsecs': '30',
+             'stopwaitsecs': '10',
              'killasgroup': 'true',
+             'stopasgroup': 'true',
+             'stopsignal': 'KILL',
              })
         if update == True:
             return script.update()
