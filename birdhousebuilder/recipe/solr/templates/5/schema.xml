@@ -141,6 +141,18 @@
    <field name="opendap_url" type="text_general" indexed="true" stored="true"/>
    <field name="wms_url" type="text_general" indexed="true" stored="true"/>
 
+   <!-- netcdf specific fields -->
+   <field name="variable" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <field name="variable_long_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <field name="cf_standard_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <field name="units" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <field name="institution" type="text_general" indexed="true" stored="true"/>
+   <field name="institute_id" type="text_general" indexed="true" stored="true"/>
+   <field name="experiment" type="text_general" indexed="true" stored="true"/>
+   <field name="project_id" type="text_general" indexed="true" stored="true"/>
+   <field name="model_id" type="text_general" indexed="true" stored="true"/>
+   
+   
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
    <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
