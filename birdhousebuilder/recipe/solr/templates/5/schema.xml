@@ -149,8 +149,12 @@
    <field name="institution" type="text_general" indexed="true" stored="true"/>
    <field name="institute_id" type="text_general" indexed="true" stored="true"/>
    <field name="experiment" type="text_general" indexed="true" stored="true"/>
+   <field name="experiment_id" type="text_general" indexed="true" stored="true"/>
    <field name="project_id" type="text_general" indexed="true" stored="true"/>
    <field name="model_id" type="text_general" indexed="true" stored="true"/>
+   <field name="creation_date" type="date" indexed="true" stored="true"/>
+   <field name="history" type="text_general" indexed="true" stored="true"/>
+   <field name="frequency" type="text_general" indexed="true" stored="true"/>
    
    
    <!-- catchall field, containing all other searchable text fields (implemented
