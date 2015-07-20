@@ -2,14 +2,6 @@
 
 
 <!--  
- This is the Solr schema file. This file should be named "schema.xml" and
- should be in the conf directory under the solr home
- (i.e. ./solr/conf/schema.xml by default) 
- or located where the classloader for the Solr webapp can find it.
-
- This example schema is the recommended starting point for users.
- It should be kept correct and concise, usable out-of-the-box.
-
  For more information, on how to customize this file, please see
  http://wiki.apache.org/solr/SchemaXml
 
@@ -71,32 +63,11 @@
        when adding a document.
    -->
 
-   <!-- field names should consist of alphanumeric or underscore characters only and
-      not start with a digit.  This is not currently strictly enforced,
-      but other field names will not have first class support from all components
-      and back compatibility is not guaranteed.  Names with both leading and
-      trailing underscores (e.g. _version_) are reserved.
-   -->
-
    <!-- If you remove this field, you must _also_ disable the update log in solrconfig.xml
       or Solr won't start. _version_ and update log are required for SolrCloud
    --> 
    <field name="_version_" type="long" indexed="true" stored="true"/>
    
-   <!-- points to the root document of a block of nested documents. Required for nested
-      document support, may be removed otherwise
-   -->
-   <field name="_root_" type="string" indexed="true" stored="false"/>
-
-   <!-- Only remove the "id" field if you have a very good reason to. While not strictly
-     required, it is highly recommended. A <uniqueKey> is present in almost all Solr 
-     installations. See the <uniqueKey> declaration below where <uniqueKey> is set to "id".
-     Do NOT change the type and apply index-time analysis to the <uniqueKey> as it will likely 
-     make routing in SolrCloud and document replacement in general fail. Limited _query_ time
-     analysis is possible as long as the indexing process is guaranteed to index the term
-     in a compatible way. Any analysis applied to the <uniqueKey> should _not_ produce multiple
-     tokens
-   -->   
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
         
    <!-- Common metadata fields, named specifically to match up with
@@ -126,7 +97,7 @@
    <field name="opendap_url" type="text_general" indexed="true" stored="true"/>
    <field name="wms_url" type="text_general" indexed="true" stored="true"/>
 
-   <!-- netcdf specific fields -->
+   <!-- ESGF specific fields -->
    <field name="variable" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="variable_long_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="cf_standard_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -198,15 +169,13 @@
    <!--dynamicField name="*" type="ignored" multiValued="true" /-->
    
 
-
-
- <!-- Field to use to determine and enforce document uniqueness. 
+   <!-- Field to use to determine and enforce document uniqueness. 
       Unless this field is marked with required="false", it will be a required field
    -->
- <uniqueKey>id</uniqueKey>
+   <uniqueKey>id</uniqueKey>
 
 
-  <!-- copyField commands copy one field to another at the time a document
+   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,
         or to add multiple fields to the same field for easier/faster searching.  -->
 
@@ -224,26 +193,7 @@
    <!-- Create a string version of author for faceting -->
    <copyField source="author" dest="author_s"/>
         
-   <!-- Above, multiple source fields are copied to the [text] field. 
-          Another way to map multiple source fields to the same 
-          destination field is to use the dynamic field syntax. 
-          copyField also supports a maxChars to copy setting.  -->
-           
-   <!-- <copyField source="*_t" dest="text" maxChars="3000"/> -->
-
-   <!-- copy name to alphaNameSort, a field designed for sorting by name -->
-   <!-- <copyField source="name" dest="alphaNameSort"/> -->
- 
-  
-    <!-- field type definitions. The "name" attribute is
-       just a label to be used by field definitions.  The "class"
-       attribute and any other attributes determine the real
-       behavior of the fieldType.
-         Class names starting with "solr" refer to java classes in a
-       standard package such as org.apache.solr.analysis
-    -->
-
-    <!-- The StrField type is not analyzed, but indexed/stored verbatim.
+   <!-- The StrField type is not analyzed, but indexed/stored verbatim.
        It supports doc values but in that case the field needs to be
        single-valued and either required or have a default value.
       -->
@@ -251,22 +201,6 @@
 
     <!-- boolean type: "true" or "false" -->
     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
-
-    <!-- sortMissingLast and sortMissingFirst attributes are optional attributes are
-         currently supported on types that are sorted internally as strings
-         and on numeric types.
-             This includes "string","boolean", and, as of 3.5 (and 4.x),
-             int, float, long, date, double, including the "Trie" variants.
-       - If sortMissingLast="true", then a sort on this field will cause documents
-         without the field to come after documents with the field,
-         regardless of the requested sort order (asc or desc).
-       - If sortMissingFirst="true", then a sort on this field will cause documents
-         without the field to come before documents with the field,
-         regardless of the requested sort order.
-       - If sortMissingLast="false" and sortMissingFirst="false" (the default),
-         then default lucene sorting will be used which places docs without the
-         field first in an ascending sort and last in a descending sort.
-    -->    
 
     <!--
       Default numeric field types. For faster range queries, consider the tint/tfloat/tlong/tdouble types.
@@ -510,16 +444,7 @@
       </analyzer>
     </fieldType>
 
-    <!-- charFilter + WhitespaceTokenizer  -->
-    <!--
-    <fieldType name="text_char_norm" class="solr.TextField" positionIncrementGap="100" >
-      <analyzer>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="mapping-ISOLatin1Accent.txt"/>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-      </analyzer>
-    </fieldType>
-    -->
-
+   
     <!-- This is an example of using the KeywordTokenizer along
          With various TokenFilterFactories to produce a sortable field
          that does not include some properties of the source text
@@ -557,24 +482,6 @@
       <analyzer>
         <tokenizer class="solr.StandardTokenizerFactory"/>
         <filter class="solr.DoubleMetaphoneFilterFactory" inject="false"/>
-      </analyzer>
-    </fieldType>
-
-    <fieldType name="payloads" stored="false" indexed="true" class="solr.TextField" >
-      <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <!--
-        The DelimitedPayloadTokenFilter can put payloads on tokens... for example,
-        a token of "foo|1.4"  would be indexed as "foo" with a payload of 1.4f
-        Attributes of the DelimitedPayloadTokenFilterFactory : 
-         "delimiter" - a one character delimiter. Default is | (pipe)
-         "encoder" - how to encode the following value into a playload
-            float -> org.apache.lucene.analysis.payloads.FloatEncoder,
-            integer -> o.a.l.a.p.IntegerEncoder
-            identity -> o.a.l.a.p.IdentityEncoder
-            Fully Qualified class name implementing PayloadEncoder, Encoder must have a no arg constructor.
-         -->
-        <filter class="solr.DelimitedPayloadTokenFilterFactory" encoder="float"/>
       </analyzer>
     </fieldType>
 
