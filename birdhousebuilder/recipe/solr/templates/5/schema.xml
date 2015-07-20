@@ -31,6 +31,9 @@
    
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
 
+   <!-- source medadata fields -->
+   <field name="source" type="string" indexed="true" stored="true"/>
+
    <!-- Common metadata fields -->
    <field name="title" type="text_general" indexed="true" stored="true"/>
    <field name="subject" type="text_general" indexed="true" stored="true"/>
@@ -39,7 +42,7 @@
    <field name="author" type="text_general" indexed="true" stored="true"/>
    <field name="keywords" type="text_general" indexed="true" stored="true"/>
    <field name="category" type="text_general" indexed="true" stored="true"/>
-   <field name="resourcename" type="text_general" indexed="true" stored="true"/>
+   <field name="resourcename" type="descendent_path" indexed="true" stored="true"/>
    <field name="url" type="text_general" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
@@ -69,7 +72,8 @@
    
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
-   <field name="text" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   <field name="urls" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" />
    
@@ -99,6 +103,18 @@
    <copyField source="author" dest="text"/>
    <copyField source="description" dest="text"/>
    <copyField source="resourcename" dest="text"/>
+   <copyField source="variable" dest="text"/>
+   <copyField source="cf_standard_name" dest="text"/>
+   <copyField source="institute_id" dest="text"/>
+   <copyField source="experiment_id" dest="text"/>
+   <copyField source="project_id" dest="text"/>
+   <copyField source="model_id" dest="text"/>
+   <copyField source="frequency" dest="text"/>
+
+   <copyField source="url" dest="urls"/>
+   <copyField source="opendap_url" dest="urls"/>
+   <copyField source="wms_url" dest="urls"/>
+   <copyField source="catalog_url" dest="urls"/>
 
    <!-- Create a string version of author for faceting -->
    <copyField source="author" dest="author_s"/>
@@ -113,22 +129,6 @@
    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
 
  
-   <!-- A text field that only splits on whitespace for exact matching of words -->
-   <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
-     <analyzer>
-       <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-     </analyzer>
-   </fieldType>
-
-   <!-- A text type for English text where stopwords and synonyms are managed using the REST API -->
-   <fieldType name="managed_en" class="solr.TextField" positionIncrementGap="100">
-     <analyzer>
-       <tokenizer class="solr.StandardTokenizerFactory"/>
-       <filter class="solr.ManagedStopFilterFactory" managed="english" />
-       <filter class="solr.ManagedSynonymFilterFactory" managed="english" />
-     </analyzer>
-   </fieldType>
-
    <!-- A general text field that has reasonable, generic
         cross-language defaults: it tokenizes with StandardTokenizer,
         removes stop words from case-insensitive "stopwords.txt"
@@ -150,14 +150,6 @@
        <filter class="solr.LowerCaseFilterFactory"/>
      </analyzer>
    </fieldType>
-
-    <!-- lowercases the entire field value, keeping it as a single token.  -->
-    <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
-      <analyzer>
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="solr.LowerCaseFilterFactory" />
-      </analyzer>
-    </fieldType>
 
     <!-- 
       Example of using PathHierarchyTokenizerFactory at index time, so
