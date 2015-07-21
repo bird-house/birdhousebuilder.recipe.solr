@@ -40,31 +40,31 @@
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
    <field name="author" type="text_general" indexed="true" stored="true"/>
-   <field name="keywords" type="text_general" indexed="true" stored="true"/>
+   <field name="keywords" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="category" type="text_general" indexed="true" stored="true"/>
    <field name="resourcename" type="descendent_path" indexed="true" stored="true"/>
-   <field name="url" type="text_general" indexed="true" stored="true"/>
+   <field name="url" type="string" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="_src_" type="string" indexed="false" stored="true"/>
 
    <!-- thredds catalog specific fields -->
-   <field name="catalog_url" type="text_general" indexed="true" stored="true"/>
-   <field name="opendap_url" type="text_general" indexed="true" stored="true"/>
-   <field name="wms_url" type="text_general" indexed="true" stored="true"/>
+   <field name="catalog_url" type="string" indexed="true" stored="true"/>
+   <field name="opendap_url" type="string" indexed="true" stored="true"/>
+   <field name="wms_url" type="string" indexed="true" stored="true"/>
 
    <!-- ESGF specific fields -->
-   <field name="variable" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="variable_long_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="cf_standard_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="units" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="institute" type="text_general" indexed="true" stored="true"/>
-   <field name="experiment" type="text_general" indexed="true" stored="true"/>
-   <field name="project" type="text_general" indexed="true" stored="true"/>
-   <field name="model" type="text_general" indexed="true" stored="true"/>
+   <field name="variable" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="variable_long_name" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="cf_standard_name" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="units" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="institute" type="string" indexed="true" stored="true"/>
+   <field name="experiment" type="string" indexed="true" stored="true"/>
+   <field name="project" type="string" indexed="true" stored="true"/>
+   <field name="model" type="string" indexed="true" stored="true"/>
    <field name="creation_date" type="date" indexed="true" stored="true"/>
-   <field name="frequency" type="text_general" indexed="true" stored="true"/>
+   <field name="frequency" type="string" indexed="true" stored="true"/>
    
    
    <!-- catchall field, containing all other searchable text fields (implemented
@@ -98,7 +98,6 @@
    <!-- Text fields from SolrCell to search by default in our catch-all field -->
    <copyField source="title" dest="text"/>
    <copyField source="author" dest="text"/>
-   <copyField source="description" dest="text"/>
    <copyField source="resourcename" dest="text"/>
    <copyField source="variable" dest="text"/>
    <copyField source="cf_standard_name" dest="text"/>
@@ -108,6 +107,7 @@
    <copyField source="model" dest="text"/>
    <copyField source="frequency" dest="text"/>
 
+   <!-- all available urls -->
    <copyField source="url" dest="urls"/>
    <copyField source="opendap_url" dest="urls"/>
    <copyField source="wms_url" dest="urls"/>
@@ -116,6 +116,17 @@
    <!-- Create a string version of author for faceting -->
    <copyField source="author" dest="author_s"/>
         
+   <!-- Create common description -->
+   <copyField source="resourcename" dest="description"/>
+
+   <!-- Create common keywords -->
+   <copyField source="variable" dest="keywords"/>
+   <copyField source="institute" dest="keywords"/>
+   <copyField source="experiment" dest="keywords"/>
+   <copyField source="project" dest="keywords"/>
+   <copyField source="model" dest="keywords"/>
+   <copyField source="frequency" dest="keywords"/>
+
    <!-- The StrField type is not analyzed, but indexed/stored verbatim.
        It supports doc values but in that case the field needs to be
        single-valued and either required or have a default value.
