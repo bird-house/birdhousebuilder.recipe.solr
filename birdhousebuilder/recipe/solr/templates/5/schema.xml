@@ -44,7 +44,7 @@
    <field name="category" type="text_general" indexed="true" stored="true"/>
    <field name="resourcename" type="descendent_path" indexed="true" stored="true"/>
    <field name="url" type="text_general" indexed="true" stored="true"/>
-   <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="content_type" type="string" indexed="true" stored="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="_src_" type="string" indexed="false" stored="true"/>
@@ -59,14 +59,11 @@
    <field name="variable_long_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="cf_standard_name" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="units" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="institution" type="text_general" indexed="true" stored="true"/>
-   <field name="institute_id" type="text_general" indexed="true" stored="true"/>
+   <field name="institute" type="text_general" indexed="true" stored="true"/>
    <field name="experiment" type="text_general" indexed="true" stored="true"/>
-   <field name="experiment_id" type="text_general" indexed="true" stored="true"/>
-   <field name="project_id" type="text_general" indexed="true" stored="true"/>
-   <field name="model_id" type="text_general" indexed="true" stored="true"/>
+   <field name="project" type="text_general" indexed="true" stored="true"/>
+   <field name="model" type="text_general" indexed="true" stored="true"/>
    <field name="creation_date" type="date" indexed="true" stored="true"/>
-   <field name="history" type="text_general" indexed="true" stored="true"/>
    <field name="frequency" type="text_general" indexed="true" stored="true"/>
    
    
@@ -105,10 +102,10 @@
    <copyField source="resourcename" dest="text"/>
    <copyField source="variable" dest="text"/>
    <copyField source="cf_standard_name" dest="text"/>
-   <copyField source="institute_id" dest="text"/>
-   <copyField source="experiment_id" dest="text"/>
-   <copyField source="project_id" dest="text"/>
-   <copyField source="model_id" dest="text"/>
+   <copyField source="institute" dest="text"/>
+   <copyField source="experiment" dest="text"/>
+   <copyField source="project" dest="text"/>
+   <copyField source="model" dest="text"/>
    <copyField source="frequency" dest="text"/>
 
    <copyField source="url" dest="urls"/>
