@@ -35,7 +35,7 @@
    <field name="source" type="string" indexed="true" stored="true"/>
 
    <!-- Common metadata fields -->
-   <field name="title" type="text_general" indexed="true" stored="true"/>
+   <field name="title" type="text" indexed="true" stored="true"/>
    <field name="subject" type="text_general" indexed="true" stored="true"/>
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
@@ -69,14 +69,11 @@
    
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
-   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   <field name="text" type="text" indexed="true" stored="false" multiValued="true"/>
    <field name="urls" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" />
    
-   <dynamicField name="ignored_*" type="ignored" multiValued="true"/>
-   <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
-
    <!-- uncomment the following to ignore any fields that don't already match an existing 
         field name or dynamic field, rather than reporting them as an error. 
         alternately, change the type="ignored" to some other type e.g. "text" if you want 
@@ -94,19 +91,6 @@
         is added to the index.  It's used either to index the same field differently,
         or to add multiple fields to the same field for easier/faster searching.  -->
 
-
-   <!-- Text fields from SolrCell to search by default in our catch-all field -->
-   <copyField source="title" dest="text"/>
-   <copyField source="author" dest="text"/>
-   <copyField source="resourcename" dest="text"/>
-   <copyField source="variable" dest="text"/>
-   <copyField source="cf_standard_name" dest="text"/>
-   <copyField source="institute" dest="text"/>
-   <copyField source="experiment" dest="text"/>
-   <copyField source="project" dest="text"/>
-   <copyField source="model" dest="text"/>
-   <copyField source="frequency" dest="text"/>
-
    <!-- all available urls -->
    <copyField source="url" dest="urls"/>
    <copyField source="opendap_url" dest="urls"/>
@@ -118,14 +102,22 @@
         
    <!-- Create common description -->
    <copyField source="resourcename" dest="description"/>
+   <copyField source="author" dest="description"/>
+   <copyField source="variable_long_name" dest="keywords"/>
 
    <!-- Create common keywords -->
    <copyField source="variable" dest="keywords"/>
+   <copyField source="cf_standard_name" dest="keywords"/>
    <copyField source="institute" dest="keywords"/>
    <copyField source="experiment" dest="keywords"/>
    <copyField source="project" dest="keywords"/>
    <copyField source="model" dest="keywords"/>
    <copyField source="frequency" dest="keywords"/>
+
+   <!-- Text fields from SolrCell to search by default in our catch-all field -->
+   <copyField source="title" dest="text"/>
+   <copyField source="description" dest="text"/>
+   <copyField source="keywords" dest="text"/>
 
    <!-- The StrField type is not analyzed, but indexed/stored verbatim.
        It supports doc values but in that case the field needs to be
@@ -135,6 +127,18 @@
    <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
    <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
+
+   <!-- A text field used for netcdf file names -->
+   <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
+     <analyzer type="index">
+       <tokenizer class="solr.PatternTokenizerFactory" pattern="[A-Za-z0-9]*" group="0"/>
+       <filter class="solr.LowerCaseFilterFactory"/>
+     </analyzer>
+     <analyzer type="query">
+       <tokenizer class="solr.PatternTokenizerFactory" pattern="[A-Za-z0-9]*" group="0"/>
+       <filter class="solr.LowerCaseFilterFactory"/>
+     </analyzer>
+   </fieldType>
 
  
    <!-- A general text field that has reasonable, generic
@@ -184,11 +188,6 @@
       </analyzer>
     </fieldType>
 
-    <!-- since fields of this type are by default not stored or indexed,
-         any data added to them will be ignored outright.  --> 
-    <fieldType name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField" />
-
-   
     <!-- A specialized field for geospatial search. If indexed, this fieldType must not be multivalued. -->
     <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
 
