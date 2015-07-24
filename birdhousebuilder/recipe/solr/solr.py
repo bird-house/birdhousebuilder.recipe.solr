@@ -10,7 +10,7 @@ from birdhousebuilder.recipe import conda, supervisor
 
 templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "solr.in.sh"))
 templ_log4j = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "log4j.properties"))
-templ_solr_core = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "5", "core.properties"))
+templ_solr_core = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "core.properties"))
 
 class Recipe(object):
     """This recipe is used by zc.buildout"""
@@ -56,7 +56,7 @@ class Recipe(object):
     def install_solr_server(self):
         server_dir = os.path.join(self.prefix, 'var', 'solr')
         conda.makedirs(server_dir)
-        solr_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "solr.xml") 
+        solr_xml = os.path.join(os.path.dirname(__file__), "templates", "solr.xml") 
         shutil.copy(solr_xml, server_dir)
         return [solr_xml]
 
@@ -101,12 +101,12 @@ class Recipe(object):
         with open(output, 'wt') as fp:
             fp.write(result)
 
-        solrconfig_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "solrconfig.xml")
+        solrconfig_xml = os.path.join(os.path.dirname(__file__), "templates", "solrconfig.xml")
         core_conf_dir = os.path.join(core_dir, 'conf')
         conda.makedirs(core_conf_dir) 
         shutil.copy(solrconfig_xml, core_conf_dir)
 
-        schema_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "schema.xml")
+        schema_xml = os.path.join(os.path.dirname(__file__), "templates", "schema.xml")
         shutil.copy(schema_xml, core_conf_dir)
 
         return [output, solrconfig_xml, schema_xml]
