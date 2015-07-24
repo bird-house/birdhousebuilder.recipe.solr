@@ -109,20 +109,6 @@ class Recipe(object):
         schema_xml = os.path.join(os.path.dirname(__file__), "templates", "5", "schema.xml")
         shutil.copy(schema_xml, core_conf_dir)
 
-        stopwords_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "stopwords.txt")
-        shutil.copy(stopwords_txt, core_conf_dir)
-
-        stopwords_en_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "lang", "stopwords_en.txt")
-        lang_dir = os.path.join(core_conf_dir, "lang")
-        conda.makedirs(lang_dir)
-        shutil.copy(stopwords_en_txt, lang_dir)
-
-        synonyms_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "synonyms.txt")
-        shutil.copy(synonyms_txt, core_conf_dir)
-
-        protwords_txt = os.path.join(os.path.dirname(__file__), "templates", "5", "protwords.txt")
-        shutil.copy(protwords_txt, core_conf_dir)
-
         return [output, solrconfig_xml, schema_xml]
 
     
