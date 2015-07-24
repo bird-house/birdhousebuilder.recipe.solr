@@ -31,18 +31,19 @@
    
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
 
-   <!-- source medadata fields -->
+   <!-- metadata fields for birdhouse -->
    <field name="source" type="string" indexed="true" stored="true"/>
+   <field name="abstract" type="text" indexed="false" stored="true"/>
 
    <!-- Common metadata fields -->
    <field name="title" type="text" indexed="false" stored="true"/>
    <field name="subject" type="text_general" indexed="false" stored="true"/>
    <field name="description" type="text_general" indexed="false" stored="true"/>
    <field name="comments" type="text_general" indexed="false" stored="true"/>
-   <field name="author" type="text_general" indexed="true" stored="true"/>
+   <field name="author" type="text_general" indexed="false" stored="true"/>
    <field name="keywords" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="category" type="string" indexed="true" stored="true"/>
-   <field name="resourcename" type="descendent_path" indexed="true" stored="true"/>
+   <field name="resourcename" type="text" indexed="false" stored="true"/>
    <field name="url" type="string" indexed="false" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
@@ -74,16 +75,17 @@
    <defaultSearchField>text</defaultSearchField>
    <solrQueryParser defaultOperator="AND"/>
 
-   <!-- all available urls -->
+   <!-- All available urls -->
    <copyField source="url" dest="urls"/>
    <copyField source="opendap_url" dest="urls"/>
    <copyField source="wms_url" dest="urls"/>
    <copyField source="catalog_url" dest="urls"/>
 
-   <!-- Create common description -->
-   <copyField source="resourcename" dest="description"/>
+   <!-- Create abstract -->
+   <copyField source="resourcename" dest="abstract"/>
+   <copyField source="description" dest="abstract"/>
 
-   <!-- Create common keywords -->
+   <!-- Create keywords -->
    <copyField source="category" dest="keywords"/>
    <copyField source="variable" dest="keywords"/>
    <copyField source="cf_standard_name" dest="keywords"/>
@@ -103,6 +105,8 @@
    <copyField source="author" dest="text"/>
    <copyField source="variable" dest="text"/>
    <copyField source="cf_standard_name" dest="text"/>
+   <copyField source="variable_long_name" dest="text"/>
+   <copyField source="units" dest="text"/>
    <copyField source="institute" dest="text"/>
    <copyField source="experiment" dest="text"/>
    <copyField source="project" dest="text"/>
@@ -142,37 +146,5 @@
        <filter class="solr.LowerCaseFilterFactory"/>
      </analyzer>
    </fieldType>
-
-   <!-- 
-      Example of using PathHierarchyTokenizerFactory at index time, so
-      queries for paths match documents at that path, or in descendent paths
-   -->
-    <fieldType name="descendent_path" class="solr.TextField">
-      <analyzer type="index">
-        <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/" />
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.KeywordTokenizerFactory" />
-      </analyzer>
-    </fieldType>
-    <!-- 
-      Example of using PathHierarchyTokenizerFactory at query time, so
-      queries for paths match documents at that path, or in ancestor paths
-    -->
-    <fieldType name="ancestor_path" class="solr.TextField">
-      <analyzer type="index">
-        <tokenizer class="solr.KeywordTokenizerFactory" />
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/" />
-      </analyzer>
-    </fieldType>
-
-    <!-- Spatial rectangle (bounding box) field. It supports most spatial predicates, and has
-     special relevancy modes: score=overlapRatio|area|area2D (local-param to the query).  DocValues is recommended for
-     relevancy. -->
-    <fieldType name="bbox" class="solr.BBoxField"
-               geo="true" distanceUnits="kilometers" numberType="_bbox_coord" />
-    <fieldType name="_bbox_coord" class="solr.TrieDoubleField" precisionStep="8" docValues="true" stored="false"/>
 
 </schema>
