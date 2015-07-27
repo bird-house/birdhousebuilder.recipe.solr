@@ -32,7 +32,7 @@
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
 
    <!-- metadata fields for birdhouse -->
-   <field name="source" type="string" indexed="true" stored="true"/>
+   <field name="source" type="source" indexed="true" stored="true"/>
    <field name="abstract" type="text" indexed="false" stored="true"/>
 
    <!-- Common metadata fields -->
@@ -144,6 +144,18 @@
      <analyzer type="query">
        <tokenizer class="solr.StandardTokenizerFactory"/>
        <filter class="solr.LowerCaseFilterFactory"/>
+     </analyzer>
+   </fieldType>
+
+   <!-- A text field used for source descriptions -->
+   <fieldType name="source" class="solr.TextField" positionIncrementGap="100">
+     <analyzer type="index">
+       <tokenizer class="solr.KeywordTokenizerFactory"/>
+       <filter class="solr.PatternReplaceFilterFactory" pattern="[:/]" replacement="_"/>
+     </analyzer>
+     <analyzer type="query">
+       <tokenizer class="solr.KeywordTokenizerFactory"/>
+       <filter class="solr.PatternReplaceFilterFactory" pattern="[:/]" replacement="_"/>
      </analyzer>
    </fieldType>
 
