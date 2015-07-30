@@ -1,6 +1,12 @@
 Change History
 **************
 
+0.1.3 (2015-07-30)
+==================
+
+* cleaned up schema.
+* using tags as default search field.
+
 0.1.2 (2015-07-28)
 ==================
 

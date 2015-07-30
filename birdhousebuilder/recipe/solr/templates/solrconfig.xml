@@ -239,7 +239,7 @@
   <initParams path="/update/**,/query,/select,/tvrh,/elevate,/spell">
     <lst name="defaults">
       <str name="update.chain">dedupe</str>
-      <str name="df">text</str>
+      <str name="df">tags</str>
     </lst>
   </initParams>
 

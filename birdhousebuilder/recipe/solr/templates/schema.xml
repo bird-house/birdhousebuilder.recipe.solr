@@ -33,17 +33,17 @@
 
    <!-- metadata fields for birdhouse -->
    <field name="source" type="source" indexed="true" stored="true"/>
-   <field name="abstract" type="text" indexed="false" stored="true"/>
+   <field name="abstract" type="text_general" indexed="false" stored="true"/>
 
    <!-- Common metadata fields -->
-   <field name="title" type="text" indexed="false" stored="true"/>
+   <field name="title" type="text_general" indexed="false" stored="true"/>
    <field name="subject" type="text_general" indexed="false" stored="true"/>
    <field name="description" type="text_general" indexed="false" stored="true"/>
    <field name="comments" type="text_general" indexed="false" stored="true"/>
    <field name="author" type="text_general" indexed="false" stored="true"/>
    <field name="keywords" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="category" type="string" indexed="true" stored="true"/>
-   <field name="resourcename" type="text" indexed="false" stored="true"/>
+   <field name="resourcename" type="string" indexed="false" stored="true"/>
    <field name="url" type="string" indexed="false" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
@@ -66,12 +66,11 @@
    <field name="frequency" type="string" indexed="true" stored="true"/>
    
    
-   <!-- catchall field, containing all other searchable text fields (implemented
-        via copyField further on in this schema  -->
-   <field name="text" type="text" indexed="true" stored="false" multiValued="true"/>
+   <!-- Default search field: tags build from title, variable, ... -->
+   <field name="tags" type="tag" indexed="true" stored="false" multiValued="true"/>
+
 
    <uniqueKey>id</uniqueKey>
-   <defaultSearchField>text</defaultSearchField>
    <solrQueryParser defaultOperator="AND"/>
 
    <!-- Create abstract -->
@@ -90,23 +89,20 @@
    <copyField source="frequency" dest="keywords"/>
 
    <!-- Text fields from SolrCell to search by default in our catch-all field -->
-   <copyField source="title" dest="text"/>
-   <copyField source="resourcename" dest="text"/>
-   <copyField source="category" dest="text"/>
-   <copyField source="subject" dest="text"/>
-   <copyField source="description" dest="text"/>
-   <copyField source="comments" dest="text"/>
-   <copyField source="author" dest="text"/>
-   <copyField source="content_type" dest="text"/>
-   <copyField source="variable" dest="text"/>
-   <copyField source="cf_standard_name" dest="text"/>
-   <copyField source="variable_long_name" dest="text"/>
-   <copyField source="units" dest="text"/>
-   <copyField source="institute" dest="text"/>
-   <copyField source="experiment" dest="text"/>
-   <copyField source="project" dest="text"/>
-   <copyField source="model" dest="text"/>
-   <copyField source="frequency" dest="text"/>
+   <copyField source="title" dest="tags"/>
+   <copyField source="resourcename" dest="tags"/>
+   <copyField source="category" dest="tags"/>
+   <copyField source="author" dest="tags"/>
+   <copyField source="content_type" dest="tags"/>
+   <copyField source="variable" dest="tags"/>
+   <copyField source="cf_standard_name" dest="tags"/>
+   <copyField source="variable_long_name" dest="tags"/>
+   <copyField source="units" dest="tags"/>
+   <copyField source="institute" dest="tags"/>
+   <copyField source="experiment" dest="tags"/>
+   <copyField source="project" dest="tags"/>
+   <copyField source="model" dest="tags"/>
+   <copyField source="frequency" dest="tags"/>
 
    <!-- The StrField type is not analyzed, but indexed/stored verbatim.
        It supports doc values but in that case the field needs to be
@@ -117,8 +113,8 @@
    <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
 
-   <!-- A text field used for title etc -->
-   <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
+   <!-- A text field used for tags -->
+   <fieldType name="tag" class="solr.TextField" positionIncrementGap="100">
      <analyzer type="index">
        <tokenizer class="solr.PatternTokenizerFactory" pattern="[A-Za-z0-9]*" group="0"/>
        <filter class="solr.LowerCaseFilterFactory"/>

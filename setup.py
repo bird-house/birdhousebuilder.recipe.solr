@@ -5,7 +5,7 @@ This module contains the tool of birdhousebuilder.recipe.solr
 from setuptools import find_packages
 from setuptools import setup
 
-version = '0.1.2'
+version = '0.1.3'
 description = 'A Buildout recipe to install and configure Apache Solr with Anaconda.'
 long_description = (
     open('README.rst').read() + '\n' +
