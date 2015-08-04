@@ -1,6 +1,12 @@
 Change History
 **************
 
+0.1.4 (2015-08-04)
+==================
+
+* using conda java-jdk (OpenJDK) package.
+* SOLr_JAVA_HOME set to birdhouse java.
+
 0.1.3 (2015-07-30)
 ==================
 
