@@ -21,6 +21,9 @@ class Recipe(object):
         
         self.prefix = b_options.get('birdhouse-home', "/opt/birdhouse")
         self.options['prefix'] = self.prefix
+
+        self.env_path = conda.conda_env_path(buildout, options)
+        self.options['env_path'] = self.env_path
         
         self.options['hostname'] = options.get('hostname', 'localhost')
         self.options['http_port'] = options.get('http_port', '8983')
@@ -113,7 +116,7 @@ class Recipe(object):
 
     
     def install_supervisor(self, update=False):
-        solr_dir = os.path.join(self.prefix, 'opt', 'solr')
+        solr_dir = os.path.join(self.env_path, 'opt', 'solr')
         solr_env = os.path.join(self.solr_home, 'solr.in.sh')
         script = supervisor.Recipe(
             self.buildout,
