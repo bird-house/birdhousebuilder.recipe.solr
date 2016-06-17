@@ -19,7 +19,7 @@ class Recipe(object):
         self.buildout, self.name, self.options = buildout, name, options
         b_options = buildout['buildout']
         
-        self.prefix = self.options.get('prefix', conda.prefix())
+        self.prefix = b_options.get('birdhouse-home', "/opt/birdhouse")
         self.options['prefix'] = self.prefix
         
         self.options['hostname'] = options.get('hostname', 'localhost')
@@ -47,11 +47,7 @@ class Recipe(object):
             self.buildout,
             self.name,
             {'pkgs': 'solr'})
-        
-        if update == True:
-            return script.update()
-        else:
-            return script.install()
+        return script.install(update)
 
         
     def install_solr_server(self):
