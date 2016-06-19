@@ -1,10 +1,10 @@
 Change History
 **************
 
-0.2.0 (2016-06-17)
+0.2.0 (2016-06-19)
 ==================
 
-* set prefix from buildout option.
+* using zc.recipe.buildout.
 
 0.1.5 (2016-01-06)
 ==================
