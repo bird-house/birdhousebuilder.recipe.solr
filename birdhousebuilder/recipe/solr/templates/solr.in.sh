@@ -1,7 +1,7 @@
 # By default the script will use JAVA_HOME to determine which java
 # to use, but you can set a specific path for Solr to use without
 # affecting other Java applications on your server/workstation.
-SOLR_JAVA_HOME="${env_path}"
+SOLR_JAVA_HOME="${java_home}"
 
 # Increase Java Heap as needed to support your indexing / query needs
 SOLR_HEAP="512m"

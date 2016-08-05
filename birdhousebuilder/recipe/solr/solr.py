@@ -3,130 +3,161 @@
 """Recipe solr"""
 
 import os
-import shutil
+import pwd
+import logging
 from mako.template import Template
 
-from birdhousebuilder.recipe import conda, supervisor
+import zc.recipe.deployment
+from zc.recipe.deployment import Configuration
+from zc.recipe.deployment import make_dir
+import birdhousebuilder.recipe.conda
+from birdhousebuilder.recipe import supervisor
 
 templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "solr.in.sh"))
 templ_log4j = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "log4j.properties"))
 templ_solr_core = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "core.properties"))
 
+def make_dirs(name, user, mode=0o755):
+    etc_uid, etc_gid = pwd.getpwnam(user)[2:4]
+    created = []
+    make_dir(name, etc_uid, etc_gid, mode, created)
+
 class Recipe(object):
-    """This recipe is used by zc.buildout"""
+    """This recipe is used by zc.buildout.
+    It installs solr from conda and setups solr configuration and a supervisor service."""
 
     def __init__(self, buildout, name, options):
         self.buildout, self.name, self.options = buildout, name, options
         b_options = buildout['buildout']
 
-        deployment = self.deployment = options.get('deployment')
-        if deployment:
-            self.options['prefix'] = buildout[deployment].get('prefix')
-        else:
-            self.options['prefix'] = os.path.join(buildout['buildout']['parts-directory'], self.name)
+        self.name = options.get('name', name)
+        self.options['name'] = self.name
+
+        self.logger = logging.getLogger(self.name)
+
+        # deployment layout
+        def add_section(section_name, options):
+            if section_name in buildout._raw:
+                raise KeyError("already in buildout", section_name)
+            buildout._raw[section_name] = options
+            buildout[section_name] # cause it to be added to the working parts
+
+        self.deployment_name = self.name + "-solr-deployment"
+        self.deployment = zc.recipe.deployment.Install(buildout, self.deployment_name, {
+            'name': "solr",
+            'prefix': self.options['prefix'],
+            'user': self.options['user'],
+            'etc-user': self.options['etc-user']})
+        add_section(self.deployment_name, self.deployment.options)
+        
+        self.options['etc-prefix'] = self.options['etc_prefix'] = self.deployment.options['etc-prefix']
+        self.options['var-prefix'] = self.options['var_prefix'] = self.deployment.options['var-prefix']
+        self.options['etc-directory'] = self.options['etc_directory'] = self.deployment.options['etc-directory']
+        self.options['lib-directory'] = self.options['lib_directory'] = self.deployment.options['lib-directory']
+        self.options['log-directory'] = self.options['log_directory'] = self.deployment.options['log-directory']
+        self.options['run-directory'] = self.options['run_directory'] = self.deployment.options['run-directory']
+        self.options['cache-directory'] = self.options['cache_directory'] = self.deployment.options['cache-directory']
         self.prefix = self.options['prefix']
 
-        self.env_path = conda.conda_env_path(buildout, options)
-        self.options['env_path'] = self.env_path
-        
-        self.options['hostname'] = options.get('hostname', 'localhost')
-        self.options['http_port'] = options.get('http_port', '8983')
-        self.options['sites'] = options.get('sites', 'birdhouse')
-        self.options['core'] = options.get('core', 'birdhouse')
-        self.options['user'] = options.get('user', '')
-        self.solr_home = os.path.join(self.prefix, 'var', 'lib', 'solr')
-        self.options['solr_home'] = self.solr_home
+        # conda packages
+        self.options['env'] = self.options.get('env', '')
+        self.options['pkgs'] = self.options.get('pkgs', 'solr')
+        self.options['pip'] = self.options.get('pip', 'pysolr')
+        self.options['channels'] = self.options.get('channels', 'defaults birdhouse')
+        self.conda = birdhousebuilder.recipe.conda.Recipe(self.buildout, self.name, {
+            'env': self.options['env'],
+            'pkgs': self.options['pkgs'],
+            'channels': self.options['channels'] })
+        self.options['conda-prefix'] = self.options['conda_prefix'] = self.conda.options['prefix']
 
+        # java options
+        self.options['java_home'] = self.options['java-home'] = self.options.get('java-home', self.options['conda-prefix'])
+
+        # jetty options
+        self.options['hostname'] = options.get('hostname', 'localhost')
+        self.options['http-port'] = self.options['http_port'] = options.get('http-port', '8983')
+
+        # solr options
+        self.options['core'] = options.get('core', 'birdhouse')
+        self.solr_home = self.options['lib-directory']
+        self.options['solr-home'] = self.options['solr_home'] = self.solr_home
+        self.options['core-directory'] = self.options['core_directory'] = os.path.join(self.solr_home, self.options.get('core'))
+        self.options['core-conf-directory'] = self.options['core_conf_directory'] = os.path.join(self.options['core-directory'], 'conf')
+        
+        # make folders
+        make_dirs(self.options['core-directory'], self.options['etc-user'], mode=0o755)
+        make_dirs(self.options['core-conf-directory'], self.options['etc-user'], mode=0o755)
 
     def install(self, update=False):
         installed = []
-        installed += list(self.install_solr(update))
-        installed += list(self.install_solr_server())
-        installed += list(self.install_env())
+        if not update:
+            installed += list(self.deployment.install())
+        installed += list(self.conda.install(update))
+        installed += list(self.install_solr_xml())
+        installed += list(self.install_solr_env())
         installed += list(self.install_log4j())
-        installed += list(self.install_core())
+        installed += list(self.install_core_properties())
+        installed += list(self.install_core_config())
+        installed += list(self.install_core_schema())
         installed += list(self.install_supervisor(update))
         return installed
-
-    
-    def install_solr(self, update=False):
-        script = conda.Recipe(
-            self.buildout,
-            self.name,
-            {'pkgs': 'solr'})
-        return script.install(update)
-
         
-    def install_solr_server(self):
-        conda.makedirs(self.solr_home)
-        solr_xml = os.path.join(os.path.dirname(__file__), "templates", "solr.xml")
-        out_solr_xml = os.path.join(self.solr_home, "solr.xml")
-        shutil.copy(solr_xml, out_solr_xml)
-        return [out_solr_xml]
-
+    def install_solr_xml(self):
+        config = Configuration(self.buildout, 'solr.xml', {
+            'deployment': self.deployment_name,
+            'directory': self.solr_home,
+            'file': os.path.join(os.path.dirname(__file__), "templates", "solr.xml")})
+        return [config.install()]
     
-    def install_env(self):
-        result = templ_solr_env.render(**self.options)
-        output = os.path.join(self.solr_home, 'solr.in.sh')
-        conda.makedirs(os.path.dirname(output))
-                
-        try:
-            os.remove(output)
-        except OSError:
-            pass
-
-        with open(output, 'wt') as fp:
-            fp.write(result)
-        return [output]
-
-    
+    def install_solr_env(self):
+        text = templ_solr_env.render(**self.options)
+        config = Configuration(self.buildout, 'solr.in.sh', {
+            'deployment': self.deployment_name,
+            'directory': self.solr_home,
+            'text': text})
+        return [config.install()]
+        
     def install_log4j(self):
-        result = templ_log4j.render(**self.options)
-        output = os.path.join(self.solr_home, 'log4j.properties')
-        conda.makedirs(os.path.dirname(output))
-                
-        try:
-            os.remove(output)
-        except OSError:
-            pass
-
-        with open(output, 'wt') as fp:
-            fp.write(result)
-        return [output]
-
+        text = templ_log4j.render(**self.options)
+        config = Configuration(self.buildout, 'log4j.properties', {
+            'deployment': self.deployment_name,
+            'directory': self.solr_home,
+            'text': text})
+        return [config.install()]
     
-    def install_core(self):
-        core_dir = os.path.join(self.solr_home, self.options.get('core'))
-        conda.makedirs(core_dir)
-        
-        result = templ_solr_core.render(**self.options)
-        output = os.path.join(core_dir, 'core.properties')
+    def install_core_properties(self):
+        text =  templ_solr_core.render(**self.options)
+        config = Configuration(self.buildout, 'core.properties', {
+            'deployment': self.deployment_name,
+            'directory': self.options['core-directory'],
+            'text': text})
+        return [config.install()]
 
-        with open(output, 'wt') as fp:
-            fp.write(result)
+    def install_core_config(self):
+        text =  templ_solr_core.render(**self.options)
+        config = Configuration(self.buildout, 'solrconfig.xml', {
+            'deployment': self.deployment_name,
+            'directory': self.options['core-conf-directory'],
+            'file': os.path.join(os.path.dirname(__file__), "templates", "solrconfig.xml")})
+        return [config.install()]
 
-        conf_dir = os.path.join(core_dir, "conf")
-        conda.makedirs(conf_dir) 
+    def install_core_schema(self):
+        text =  templ_solr_core.render(**self.options)
+        config = Configuration(self.buildout, 'schema.xml', {
+            'deployment': self.deployment_name,
+            'directory': self.options['core-conf-directory'],
+            'file': os.path.join(os.path.dirname(__file__), "templates", "schema.xml")})
+        return [config.install()]
 
-        solrconfig_xml = os.path.join(os.path.dirname(__file__), "templates", "solrconfig.xml")
-        out_solrconfig_xml = os.path.join(conf_dir, "solrconfig.xml")
-        shutil.copy(solrconfig_xml, out_solrconfig_xml)
-
-        schema_xml = os.path.join(os.path.dirname(__file__), "templates", "schema.xml")
-        out_schema_xml = os.path.join(conf_dir, "schema.xml")
-        shutil.copy(schema_xml, out_schema_xml)
-
-        return [output, out_solrconfig_xml, out_schema_xml]
-
-    
     def install_supervisor(self, update=False):
-        solr_dir = os.path.join(self.env_path, 'opt', 'solr')
+        solr_dir = os.path.join(self.options['conda-prefix'], 'opt', 'solr')
         solr_env = os.path.join(self.solr_home, 'solr.in.sh')
         script = supervisor.Recipe(
             self.buildout,
-            self.options.get('sites'),
-            {'deployment': self.deployment,
+            self.name,
+            {'prefix': self.options['prefix'],
              'user': self.options.get('user'),
+             'etc-user': self.options['etc-user'],
              'program': 'solr',
              'command': '{0}/bin/solr start -f'.format(solr_dir),
              'environment': 'SOLR_INCLUDE="{0}"'.format(solr_env),
