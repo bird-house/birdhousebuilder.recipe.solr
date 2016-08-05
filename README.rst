@@ -1,8 +1,10 @@
-*****************************
+****************************
 birdhousebuilder.recipe.solr
-*****************************
+****************************
 
-.. contents::
+.. image:: https://travis-ci.org/bird-house/birdhousebuilder.recipe.solr.svg?branch=master
+   :target: https://travis-ci.org/bird-house/birdhousebuilder.recipe.solr
+   :alt: Travis Build
 
 Introduction
 ************
@@ -21,9 +23,9 @@ This recipe is used by the `Birdhouse`_ project.
 Usage
 *****
 
-The recipe requires that Anaconda is already installed. It assumes that the default Anaconda location is in your home directory ``~/anaconda``. Otherwise you need to set the ``ANACONDA_HOME`` environment variable or the Buildout option ``anaconda-home``.
+The recipe requires that Anaconda is already installed. You can use the buildout option ``anaconda-home`` to set the prefix for the anaconda installation. Otherwise the environment variable ``CONDA_PREFIX`` (variable is set when activating a conda environment) is used as conda prefix.
 
-It installs the ``solr`` package from a conda channel in a conda environment named ``birdhouse``. The location of the birdhouse environment is ``.conda/envs/birdhouse``. It deploys a `Supervisor`_ configuration for ``Solr`` in ``~/.conda/envs/birdhouse/etc/supervisor/conf.d/solr.conf``. Supervisor can be started with ``~/.conda/envs/birdhouse/etc/init.d/supervisor start``.
+It installs the ``solr`` package from a conda channel in a conda environment defined by ``CONDA_PREFIX``.  The intallation folder is given by the ``prefix`` buildout option. It deploys a `Supervisor`_ configuration for Solr in ``${prefix}/etc/supervisor/conf.d/solr.conf``. Supervisor can be started with ``${prefix}/etc/init.d/supervisord start``.
 
 By default ``Solr`` will be available on http://localhost:8983/solr.
 
@@ -34,22 +36,13 @@ Supported options
 
 The recipe supports the following options:
 
-``anaconda-home``
-   Buildout option with the root folder of the Anaconda installation. Default: ``$HOME/anaconda``.
-   The default location can also be set with the environment variable ``ANACONDA_HOME``. Example::
+**anaconda-home**
+  Buildout option pointing to the root folder of the Anaconda installation. Default: ``$HOME/anaconda``.
 
-     export ANACONDA_HOME=/opt/anaconda
-
-   Search priority is:
-
-   1. ``anaconda-home`` in ``buildout.cfg``
-   2. ``$ANACONDA_HOME``
-   3. ``$HOME/anaconda``
-
-``hostname``
+**hostname**
    The hostname of the ``Solr`` service (nginx). Default: ``localhost``
 
-``http_port``
+**http-port**
    The http port of the ``Solr`` service (nginx). Default: ``8983``
 
 
@@ -62,22 +55,11 @@ The following example ``buildout.cfg`` installs ``Solr`` with Anaconda::
   [buildout]
   parts = solr
 
-  anaconda-home = /home/myself/anaconda
-
   [solr]
   recipe = birdhousebuilder.recipe.solr
   hostname = localhost
   http-port = 8983
 
-After installing with Buildout start the ``Solr`` service with::
-
-  $ cd /home/myself/.conda/envs/birdhouse
-  $ etc/init.d/supervisord start  # start|stop|restart
-  $ bin/supervisorctl status      # check that pycsw is running
-
-Open your browser with the following URL:: 
-
-  http://localhost:8983/solr
 
 
 
