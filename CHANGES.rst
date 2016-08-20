@@ -1,6 +1,12 @@
 Change History
 **************
 
+0.2.1 (2016-06-20)
+==================
+
+* fixed permissions of solr-home.
+* added solr-jetty-context.xml to configure jetty tempDirectory. 
+
 0.2.0 (2016-06-19)
 ==================
 
