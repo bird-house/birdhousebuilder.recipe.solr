@@ -88,7 +88,8 @@ class Recipe(object):
         
         # make folders
         make_dirs(self.options['core-directory'], self.options['user'], mode=0o755)
-        make_dirs(self.options['core-conf-directory'], self.options['user'], mode=0o755)
+        make_dirs(self.options['core-conf-directory'], self.options['etc-user'], mode=0o755)
+        make_dirs(os.path.join(self.options['core-directory'], 'data'), self.options['user'], mode=0o755)
 
     def install(self, update=False):
         installed = []
