@@ -27,7 +27,7 @@ reqs = ['setuptools',
         'zc.recipe.deployment >=1.3.0',
         'Mako',
         'birdhousebuilder.recipe.conda >=0.3.3',
-        'birdhousebuilder.recipe.supervisor >=0.3.4',]
+        'birdhousebuilder.recipe.supervisor >=0.3.4', ]
 tests_reqs = ['zc.buildout', 'zope.testing']
 
 setup(name=name,
@@ -47,8 +47,8 @@ setup(name=name,
       author_email='wps-dev@dkrz.de',
       url='https://github.com/bird-house/birdhousebuilder.recipe.solr',
       license='Apache License 2',
-      install_requires = reqs,
-      extras_require = dict(tests=tests_reqs),
+      install_requires=reqs,
+      extras_require=dict(tests=tests_reqs),
       entry_points=entry_points,
       packages=find_packages(exclude=['ez_setup']),
       namespace_packages=['birdhousebuilder', 'birdhousebuilder.recipe'],

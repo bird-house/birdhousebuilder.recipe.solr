@@ -19,10 +19,12 @@ templ_solr_core = Template(filename=os.path.join(os.path.dirname(__file__), "tem
 templ_jetty_context = Template(
     filename=os.path.join(os.path.dirname(__file__), "templates", "solr-jetty-context.xml"))
 
+
 def make_dirs(name, user, mode=0o755):
     etc_uid, etc_gid = pwd.getpwnam(user)[2:4]
     created = []
     make_dir(name, etc_uid, etc_gid, mode, created)
+
 
 class Recipe(object):
     """This recipe is used by zc.buildout.
@@ -42,7 +44,7 @@ class Recipe(object):
             if section_name in buildout._raw:
                 raise KeyError("already in buildout", section_name)
             buildout._raw[section_name] = options
-            buildout[section_name] # cause it to be added to the working parts
+            buildout[section_name]  # cause it to be added to the working parts
 
         self.deployment_name = self.name + "-solr-deployment"
         self.deployment = zc.recipe.deployment.Install(buildout, self.deployment_name, {
@@ -51,7 +53,7 @@ class Recipe(object):
             'user': self.options['user'],
             'etc-user': self.options['etc-user']})
         add_section(self.deployment_name, self.deployment.options)
-        
+
         self.options['etc-prefix'] = self.options['etc_prefix'] = self.deployment.options['etc-prefix']
         self.options['var-prefix'] = self.options['var_prefix'] = self.deployment.options['var-prefix']
         self.options['etc-directory'] = self.options['etc_directory'] = self.deployment.options['etc-directory']
@@ -69,11 +71,12 @@ class Recipe(object):
         self.conda = birdhousebuilder.recipe.conda.Recipe(self.buildout, self.name, {
             'env': self.options['env'],
             'pkgs': self.options['pkgs'],
-            'channels': self.options['channels'] })
+            'channels': self.options['channels']})
         self.options['conda-prefix'] = self.options['conda_prefix'] = self.conda.options['prefix']
 
         # java options
-        self.options['java_home'] = self.options['java-home'] = self.options.get('java-home', self.options['conda-prefix'])
+        self.options['java_home'] = self.options['java-home'] = self.options.get(
+            'java-home', self.options['conda-prefix'])
 
         # jetty options
         self.options['hostname'] = options.get('hostname', 'localhost')
@@ -83,9 +86,11 @@ class Recipe(object):
         self.options['core'] = options.get('core', 'birdhouse')
         self.solr_home = self.options['lib-directory']
         self.options['solr-home'] = self.options['solr_home'] = self.solr_home
-        self.options['core-directory'] = self.options['core_directory'] = os.path.join(self.solr_home, self.options.get('core'))
-        self.options['core-conf-directory'] = self.options['core_conf_directory'] = os.path.join(self.options['core-directory'], 'conf')
-        
+        self.options['core-directory'] = self.options['core_directory'] = os.path.join(
+            self.solr_home, self.options.get('core'))
+        self.options['core-conf-directory'] = self.options['core_conf_directory'] = os.path.join(
+            self.options['core-directory'], 'conf')
+
         # make folders
         make_dirs(self.options['core-directory'], self.options['user'], mode=0o755)
         make_dirs(self.options['core-conf-directory'], self.options['etc-user'], mode=0o755)
@@ -111,17 +116,17 @@ class Recipe(object):
         config = Configuration(self.buildout, 'solr-jetty-context.xml', {
             'deployment': self.deployment_name,
             'directory': os.path.join(self.options['conda-prefix'],
-                                          'opt', 'solr', 'server', 'contexts'),
+                                      'opt', 'solr', 'server', 'contexts'),
             'text': text})
         return [config.install()]
-    
+
     def install_solr_xml(self):
         config = Configuration(self.buildout, 'solr.xml', {
             'deployment': self.deployment_name,
             'directory': self.solr_home,
             'file': os.path.join(os.path.dirname(__file__), "templates", "solr.xml")})
         return [config.install()]
-    
+
     def install_solr_env(self):
         text = templ_solr_env.render(**self.options)
         config = Configuration(self.buildout, 'solr.in.sh', {
@@ -129,7 +134,7 @@ class Recipe(object):
             'directory': self.solr_home,
             'text': text})
         return [config.install()]
-        
+
     def install_log4j(self):
         text = templ_log4j.render(**self.options)
         config = Configuration(self.buildout, 'log4j.properties', {
@@ -137,9 +142,9 @@ class Recipe(object):
             'directory': self.solr_home,
             'text': text})
         return [config.install()]
-    
+
     def install_core_properties(self):
-        text =  templ_solr_core.render(**self.options)
+        text = templ_solr_core.render(**self.options)
         config = Configuration(self.buildout, 'core.properties', {
             'deployment': self.deployment_name,
             'directory': self.options['core-directory'],
@@ -147,7 +152,7 @@ class Recipe(object):
         return [config.install()]
 
     def install_core_config(self):
-        text =  templ_solr_core.render(**self.options)
+        text = templ_solr_core.render(**self.options)
         config = Configuration(self.buildout, 'solrconfig.xml', {
             'deployment': self.deployment_name,
             'directory': self.options['core-conf-directory'],
@@ -155,7 +160,7 @@ class Recipe(object):
         return [config.install()]
 
     def install_core_schema(self):
-        text =  templ_solr_core.render(**self.options)
+        text = templ_solr_core.render(**self.options)
         config = Configuration(self.buildout, 'schema.xml', {
             'deployment': self.deployment_name,
             'directory': self.options['core-conf-directory'],
@@ -185,6 +190,6 @@ class Recipe(object):
     def update(self):
         return self.install(update=True)
 
+
 def uninstall(name, options):
     pass
-
