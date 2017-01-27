@@ -6,6 +6,7 @@ Change History
 
 * pep8.
 * update Readme.
+* fixed travis.
 
 0.2.1 (2016-08-20)
 ==================
