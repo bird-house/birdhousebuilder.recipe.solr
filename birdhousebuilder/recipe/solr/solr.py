@@ -16,6 +16,8 @@ from birdhousebuilder.recipe import supervisor
 templ_solr_env = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "solr.in.sh"))
 templ_log4j = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "log4j.properties"))
 templ_solr_core = Template(filename=os.path.join(os.path.dirname(__file__), "templates", "core.properties"))
+templ_jetty_context = Template(
+    filename=os.path.join(os.path.dirname(__file__), "templates", "solr-jetty-context.xml"))
 
 def make_dirs(name, user, mode=0o755):
     etc_uid, etc_gid = pwd.getpwnam(user)[2:4]
@@ -85,14 +87,16 @@ class Recipe(object):
         self.options['core-conf-directory'] = self.options['core_conf_directory'] = os.path.join(self.options['core-directory'], 'conf')
         
         # make folders
-        make_dirs(self.options['core-directory'], self.options['etc-user'], mode=0o755)
+        make_dirs(self.options['core-directory'], self.options['user'], mode=0o755)
         make_dirs(self.options['core-conf-directory'], self.options['etc-user'], mode=0o755)
+        make_dirs(os.path.join(self.options['core-directory'], 'data'), self.options['user'], mode=0o755)
 
     def install(self, update=False):
         installed = []
         if not update:
             installed += list(self.deployment.install())
         installed += list(self.conda.install(update))
+        installed += list(self.install_jetty_context())
         installed += list(self.install_solr_xml())
         installed += list(self.install_solr_env())
         installed += list(self.install_log4j())
@@ -101,7 +105,16 @@ class Recipe(object):
         installed += list(self.install_core_schema())
         installed += list(self.install_supervisor(update))
         return installed
-        
+
+    def install_jetty_context(self):
+        text = templ_jetty_context.render(**self.options)
+        config = Configuration(self.buildout, 'solr-jetty-context.xml', {
+            'deployment': self.deployment_name,
+            'directory': os.path.join(self.options['conda-prefix'],
+                                          'opt', 'solr', 'server', 'contexts'),
+            'text': text})
+        return [config.install()]
+    
     def install_solr_xml(self):
         config = Configuration(self.buildout, 'solr.xml', {
             'deployment': self.deployment_name,

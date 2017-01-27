@@ -7,7 +7,7 @@ from setuptools import setup
 
 name = 'birdhousebuilder.recipe.solr'
 
-version = '0.2.0'
+version = '0.2.1'
 description = 'A Buildout recipe to install and configure Apache Solr with Anaconda.'
 long_description = (
     open('README.rst').read() + '\n' +
@@ -44,7 +44,7 @@ setup(name=name,
       ],
       keywords='buildout recipe solr birdhouse conda anaconda',
       author='Birdhouse',
-      author_email='wps-dev at dkrz.de',
+      author_email='wps-dev@dkrz.de',
       url='https://github.com/bird-house/birdhousebuilder.recipe.solr',
       license='Apache License 2',
       install_requires = reqs,
